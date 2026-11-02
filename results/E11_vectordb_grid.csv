@@ -1,0 +1,13 @@
+first_stage,similarity,rerank,P,S_recall,alpha_NDCG,Dups
+BM25 pool,TF-IDF cosine,MMR,1.0,0.978,0.787,0.0
+BM25 pool,TF-IDF cosine,Submodular,1.0,0.911,0.606,0.1
+BM25 pool,TF-IDF cosine,top-K,1.0,0.511,0.459,0.667
+BM25 pool,Vector-DB embeddings,MMR,1.0,0.978,0.77,0.0
+BM25 pool,Vector-DB embeddings,Submodular,1.0,0.944,0.626,0.1
+BM25 pool,Vector-DB embeddings,top-K,1.0,0.511,0.459,0.667
+Vector DB + BM25 pool,TF-IDF cosine,MMR,1.0,0.978,0.746,0.0
+Vector DB + BM25 pool,TF-IDF cosine,Submodular,1.0,0.444,0.42,0.433
+Vector DB + BM25 pool,TF-IDF cosine,top-K,1.0,0.333,0.385,0.733
+Vector DB + BM25 pool,Vector-DB embeddings,MMR,1.0,0.978,0.72,0.033
+Vector DB + BM25 pool,Vector-DB embeddings,Submodular,1.0,0.467,0.424,0.5
+Vector DB + BM25 pool,Vector-DB embeddings,top-K,1.0,0.333,0.385,0.733

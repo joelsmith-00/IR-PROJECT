@@ -1,0 +1,6 @@
+system,P,S_recall,alpha_NDCG
+BM25,1.0,0.511,0.459
+MMR,1.0,0.978,0.787
+xQuAD (k-means aspects),1.0,0.822,0.558
+Submodular,1.0,0.911,0.606
+LTR (ridge),1.0,0.511,0.459

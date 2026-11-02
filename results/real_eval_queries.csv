@@ -1,0 +1,16 @@
+query,system,P,Recall,AP,NDCG,MRR,S_recall,alpha_NDCG,Dups
+Tax + Labour and industrial disputes + Constitutional rights,BM25,1.0,0.175,1.0,1.0,1.0,1.0,0.754,0
+Tax + Labour and industrial disputes + Constitutional rights,MMR,1.0,0.175,1.0,1.0,1.0,1.0,0.763,0
+Tax + Labour and industrial disputes + Constitutional rights,Submodular,1.0,0.175,1.0,1.0,1.0,1.0,0.752,0
+"Land and property + Tenancy and eviction + Company, partnership and contract",BM25,1.0,0.204,1.0,1.0,1.0,1.0,0.883,0
+"Land and property + Tenancy and eviction + Company, partnership and contract",MMR,1.0,0.204,1.0,1.0,1.0,1.0,0.814,0
+"Land and property + Tenancy and eviction + Company, partnership and contract",Submodular,1.0,0.204,1.0,1.0,1.0,1.0,0.875,0
+Criminal law + Service and employment + Constitutional rights,BM25,1.0,0.213,1.0,1.0,1.0,1.0,0.642,0
+Criminal law + Service and employment + Constitutional rights,MMR,1.0,0.213,1.0,1.0,1.0,0.667,0.583,0
+Criminal law + Service and employment + Constitutional rights,Submodular,1.0,0.213,1.0,1.0,1.0,1.0,0.784,0
+Tax,BM25,1.0,0.385,1.0,1.0,1.0,1.0,1.0,0
+Tax,MMR,1.0,0.385,1.0,1.0,1.0,1.0,1.0,0
+Tax,Submodular,1.0,0.385,1.0,1.0,1.0,1.0,1.0,0
+Criminal law,BM25,1.0,0.5,1.0,1.0,1.0,1.0,1.0,0
+Criminal law,MMR,1.0,0.5,1.0,1.0,1.0,1.0,1.0,0
+Criminal law,Submodular,1.0,0.5,1.0,1.0,1.0,1.0,1.0,0

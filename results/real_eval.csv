@@ -1,0 +1,4 @@
+system,P,S_recall,alpha_NDCG,NDCG,Dups
+BM25,1.0,1.0,0.856,1.0,0.0
+MMR,1.0,0.933,0.832,1.0,0.0
+Submodular,1.0,1.0,0.882,1.0,0.0

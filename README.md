@@ -1,6 +1,14 @@
-# Diverse Legal Case Retrieval Using Submodular Optimization: full project
+# Diverse Legal Case Retrieval: BM25 + diversification, submodular selection vs MMR
 
-BM25 first-stage retrieval followed by greedy submodular set selection, tested on a synthetic legal corpus with known ground truth.
+BM25 first-stage retrieval followed by a diversifying second stage, tested on a synthetic legal corpus with known ground truth (plus a small real-judgment check with weak labels).
+
+## Headline result (10 seeds, `results/`)
+**Diversifying a BM25 pool helps a lot, but the submodular method is not the winner: plain MMR beats it on diversity.**
+- **BM25 alone is redundant.** Its top 10 covers about 49% of the legal issues in a multi-issue query and repeats near-copies.
+- **MMR beats submodular selection.** On alpha-NDCG the difference (submodular minus MMR) is -0.18, 95% bootstrap interval -0.21 to -0.16; on S-recall it is -0.07 (interval -0.11 to -0.02). At lambda = 0.7 on multi-issue queries MMR covers about 98% of issues, submodular about 86%.
+- **What submodular selection still offers.** It beats BM25 (+0.15 alpha-NDCG) and xQuAD (+0.05); greedy has a provable (1 - 1/e) guarantee and in practice reached at least 0.996 of the exact optimum on small pools; and it never lowered precision on single-issue controls (60 of 60 runs neutral), where MMR dropped precision from 1.0 to about 0.85.
+- **Submodular is fragile on non-BM25 pools.** With lambda = 0.7 its S-recall falls from 0.91 on a BM25 pool to 0.43 (Dense) and 0.44 (Hybrid), while MMR stays at 0.92 and 0.98 (E10). It recovers only at lambda >= 0.9 (E12a), so lambda has to be tuned per pool.
+- So these results do **not** support "submodular beats MMR". Caveats: synthetic bag-of-words text, binary relevance, LSA instead of neural embeddings; the real-judgment check uses automatic keyword labels (see Limits).
 
 ## Folder map
     legal_retrieval_project/
@@ -15,6 +23,7 @@ BM25 first-stage retrieval followed by greedy submodular set selection, tested o
         run_experiments.py       experiments E1-E10 + k-means check
         run_vectordb.py          vector-DB + LLM stage, experiment E11, rag_demo.json
         export_frontend.py       exports a pipeline trace + tables as JSON
+      tests/                   unit tests (diversify, case titles) and the stand-in-LLM pipeline test; see "Tests"
       frontend/index.html      web app: landing page, Explorer, How it works, IR Lab, Python pipeline
       results/                 CSV tables and figures from the last run (10 seeds)
       data/frontend_data.json  what the Python pipeline tab displays
@@ -27,6 +36,20 @@ BM25 first-stage retrieval followed by greedy submodular set selection, tested o
     python build.py            # optional: re-run all experiments and refresh the front end (about 30 s)
 
 You can also double-click `frontend/index.html`; it works without a server.
+
+## Tests
+Run from the repo root (these use `unittest`, so no extra install; they find `backend/` from their own location, so the working directory does not matter):
+
+    python -m unittest tests.test_diversify tests.test_real_titles -v
+
+- `tests/test_diversify.py`: lazy greedy picks the same set as plain greedy (same objective value when duplicate cases create exact ties); greedy reaches at least (1 - 1/e) of the brute-force optimum on small pools (worst ratio observed in the test pools: about 0.96); the objective is monotone submodular; greedy gains sum to the objective.
+- `tests/test_real_titles.py`: case titles for the real judgments (cleaned docket lines; see Real cases below).
+
+The stand-in-LLM pipeline test is separate and **must be run from `backend/`** (it uses paths relative to the working directory and needs `scikit-learn`, so run `pip install -r requirements.txt` first):
+
+    cd backend && python ../tests/test_llm_pipeline.py
+
+Do not point `unittest discover` at the whole `tests/` folder: `test_llm_pipeline.py` is a script that runs on import.
 
 ## How front end and back end connect
 - The Explorer, How it works and IR Lab tabs run the method in JavaScript inside the browser.
@@ -57,6 +80,7 @@ You can also double-click `frontend/index.html`; it works without a server.
 
 ## Real cases and "Find my cases"
 - **Data:** `data/real/cases_raw.json` holds 105 records from the public GitHub repo `sassysohom48/JusticeRAG` (code is MIT-licensed). The loader keeps the 100 full judgments (Indian Supreme Court, mostly 1950s to 1990s) and drops 5 short summaries. **That repo does not say where the judgment texts came from. Verify the source and terms before publishing results.** A documented alternative is the Indian Supreme Court Judgments dataset on AWS Open Data (CC-BY-4.0): `aws s3 ls --no-sign-request s3://indian-supreme-court-judgments/`. Put its text into the same JSON format (`id, case_name, text`) and re-run.
+- **Titles:** these judgments have no party-name caption (the text starts with the docket line, sometimes with its first characters cut off), so a case is titled by its cleaned docket line, e.g. `Civil Appeal No. 50 of 1961`; it is not a case name like `X v. Y`. Names `X v. Y` found in the body are cited precedents, so they are not used. One text that starts mid-sentence gets a neutral `Supreme Court judgment (record N)` title. Real names need a source that carries them (for example the AWS dataset below).
 - **Labels:** `irdiv/real.py` assigns up to 3 topics per case with keyword rules (tenancy, tax, criminal, labour, constitutional, and so on). These are weak automatic labels, not expert judgments. Because the test queries use words close to those rules, BM25 already scores well and differences between systems are small. Do not present these numbers as proof.
 - **Command line:** `cd backend && python run_real.py --query "my landlord evicted me without notice" --k 5` (uses Ollama for keyword expansion if running).
 - **Web tab "Find my cases":** the user types their problem. The page's LLM extracts legal issues and search words; BM25 plus submodular selection (in JavaScript, over the embedded cases) picks a diverse set; the LLM adds one grounded sentence per case. Without an LLM the page falls back to the user's own words. The LLM only runs when the page is opened inside Claude (it uses the viewer's own Claude account and asks consent on first use); a double-clicked local copy has no LLM.
@@ -75,8 +99,8 @@ You can also double-click `frontend/index.html`; it works without a server.
 - BM25 top 10 covers about 49% of query issues on multi-issue queries; submodular selection about 86%, with far fewer near-copies.
 - MMR scored higher than submodular on S-recall and alpha-NDCG at lambda = 0.7, so "submodular beats MMR" is not supported.
 - On single-issue controls submodular was neutral in all 60 runs.
-- Greedy reached at least 0.999 of the exact optimum on small pools (bound: 0.63).
-- **Hybrid-pool failure explained (E12):** the pool holds the same issues, but its relevance scores are nearly flat, so lambda = 0.7 under-weights coverage. At lambda >= 0.9 it recovers (S-recall 0.88 to 0.98). A cross-validated ridge model that learns lambda per query reached alpha-NDCG 0.646 vs 0.513 for fixed 0.7 (best possible per query: 0.653).
+- Greedy reached at least 0.996 of the exact optimum on small pools (mean 0.9995; bound: 0.63; E6).
+- **Hybrid-pool failure (E10, E12):** submodular S-recall is 0.44 on the Hybrid pool at lambda = 0.7 (0.91 on the BM25 pool). The lambda sweep shows it recovers at lambda >= 0.9 (0.88 to 0.98). The likely cause is that the pool's relevance scores are nearly flat, so lambda = 0.7 under-weights coverage; that mechanism is not tabulated, only the lambda effect is. A cross-validated ridge model that learns lambda per query reached alpha-NDCG 0.646 vs 0.513 for fixed 0.7 (best possible per query: 0.653); a plain fixed 0.9 already gets 0.608, so most of the gain comes from simply using a larger lambda.
 - **MMR still beats submodular** on alpha-NDCG with bootstrap intervals (difference -0.18, 95% interval -0.21 to -0.16). Submodular beats BM25 (+0.15) and xQuAD (+0.05).
 - **Speed (E13):** lazy greedy needs about a quarter of the gain evaluations, but in this Python code it only wins on time at pool 400; the vectorised plain greedy is fastest below that.
 - **Learning to rank (pointwise ridge)** matched BM25 exactly: it optimises relevance, so it adds no diversity.
@@ -84,4 +108,4 @@ You can also double-click `frontend/index.html`; it works without a server.
 ## Limits
 Real-data limits: 100 old judgments only; automatic labels; no expert relevance judgments; LLM notes can be wrong.
 
-Synthetic bag-of-words text, binary relevance, LSA instead of neural embeddings. Not done: LLM-rewritten subset, real data, xQuAD/PM-2, learning to rank.
+Synthetic bag-of-words text, binary relevance, LSA instead of neural embeddings. Not done: LLM-rewritten subset, PM-2, a non-pointwise learning-to-rank model.

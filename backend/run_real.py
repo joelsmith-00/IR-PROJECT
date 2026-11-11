@@ -60,7 +60,7 @@ def main():
     df = pd.DataFrame(rows); sfx = "" if a.labels == "rules" else "_llmlabels"; df.round(3).to_csv(f"{a.out}/real_eval_queries{sfx}.csv", index=False)
     m = df.groupby("system")[["P", "S_recall", "alpha_NDCG", "NDCG", "Dups"]].mean().round(3).reset_index(); m.to_csv(f"{a.out}/real_eval{sfx}.csv", index=False); print(m.to_string(index=False))
     if a.labels != "rules": return
-    ref = lambda t: re.sub(r"\s+", " ", t)[:34]
+    ref = lambda t: re.sub(r"\s+", " ", t)[:70]   # titles are already <= 69 chars (real._title), so this never clips a docket line
     cases = [dict(id=d["id"], title=(ref(d["title"]) + " | " + snippet(d["text"])[:70]).strip(), topics=d["topics"], acts=d["acts"], snip=snippet(d["text"]), text=d["text"][:9000]) for d in load_real("../data/real/cases_raw.json")]
     json.dump(dict(topics=TN, eval=m.to_dict("records"), cases=cases), open("../data/real/real_cases.json", "w"), separators=(",", ":")); print(len(cases), "cases exported")
 
